@@ -412,3 +412,8 @@ $RECYCLE.BIN/
 # RimWorld specific
 *.rws
 *.rwf
+
+# Beads / Dolt files (added by bd init)
+.dolt/
+*.db
+.beads-credential-key
