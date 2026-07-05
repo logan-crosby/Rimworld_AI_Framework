@@ -1,6 +1,7 @@
 # 03 — Action Layer Spec
 
 **Status:** draft | **Implements:** RimAI.Agent.Action
+**Amendments (06-plan-audit.md wins):** whitelist gains construction family (`PlaceBlueprint`, `PlaceFloor`, `CancelBlueprint`, `Deconstruct`) + `SetPlantToGrow` + `SetPrisonerInteraction` — post-audit 41 types (G-04, G-12). Handlers are **phased** — M2 ships the core-12 only; unregistered types return `ValidationError("not yet implemented")`, never throw (G-13). Entity IDs follow the shared `EntityId` rule and `IEntityResolver` (G-03). `CreateZone` takes rect params `x,z,width,height` (max 20×20), not raw cell arrays (G-21). `AddDesignation.designation_type` enum: `Hunt, Tame, Slaughter, Mine, CutPlants, Harvest, HaulThing, Strip, Open` (G-04). Commands carry optional `SnapshotTick`; reject if source snapshot >15,000 ticks old (G-17).
 **Prerequisite specs:** 00-MASTER-PLAN.md, 01-perception.md, 02-cognition.md
 **Consumed by:** 05-orchestration.md
 
@@ -470,7 +471,7 @@ namespace RimAI.Agent.Action
 
 ### M2 — Action (first testable)
 - [ ] `ActionExecutor` accepts `ActionCommand[]`, executes on main thread, returns `ActionFeedback`.
-- [ ] All 30 `ActionCommandType` values have a registered `ICommandHandler`.
+- [ ] The **core-12** `ActionCommandType` values (06 G-13) have registered `ICommandHandler`s; all other enum values dispatch to `ValidationError("not yet implemented")` without throwing.
 - [ ] `MainThreadCommandQueue` thread-safety: enqueue from 4 background threads simultaneously,
   drain on main thread, no lost or duplicated commands.
 - [ ] `PostExecutionVerifier` confirms at least 80% of commands by verification hints.

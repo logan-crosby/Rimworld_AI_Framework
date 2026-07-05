@@ -1,7 +1,7 @@
 # RimAI Master Plan — An AI That Plays RimWorld Fully
 
 **Status:** authoritative. Implementing agents start here, then read the layer spec they are assigned.
-**Docs:** `01-perception.md`, `02-cognition.md`, `03-action.md`, `04-memory.md`, `05-orchestration.md`
+**Docs:** `01-perception.md`, `02-cognition.md`, `03-action.md`, `04-memory.md`, `05-orchestration.md`, **`06-plan-audit.md` (reconciliation pass — where it conflicts with 00–05, 06 wins)**
 **Skeleton code:** `RimAI.Agent/` project (stubs with comment trees; every public member has a `// TODO(impl)` contract comment).
 
 ## 1. Vision
@@ -61,8 +61,9 @@ A player-replacement AI: it observes the colony, forms goals, issues the same co
 ## 5. Milestones (implementation order — each ends green-build + testable)
 
 - **M0 — Framework defect burn-down.** (done: raf-vlv/85d/log/ns4)
-- **M1 — Perception.** ColonySnapshot DTOs + EventBus. Exit: dev-mode dump of a live colony snapshot as JSON.
-- **M2 — Action.** Command queue + whitelist executor + verifier for 10 core commands. Exit: scripted (no-LLM) command file drives the colony.
+- **M0.5 — Framework API gaps.** Token-usage fields on `UnifiedChatResponse`/`UnifiedEmbeddingResponse` + translator plumbing (06 G-01). Small; must land before M3 (budget manager depends on it). M1/M2 unaffected.
+- **M1 — Perception.** ColonySnapshot DTOs + EventBus. Includes snapshot v2 entity coverage (buildings/zones/bills/policies/factions — 06 G-02), shared EntityId rule (G-03), Harmony/csproj/About.xml fixes first (G-05), test project bootstrap (G-06). Exit: dev-mode dump of a live colony snapshot as JSON.
+- **M2 — Action.** Command queue + whitelist executor + verifier for the **core-12 commands** (06 G-13); remaining handlers phased into M3–M5. Exit: scripted (no-LLM) command file drives the colony via the dev harness (G-28).
 - **M3 — Reactive loop (first closed loop).** EventBus → reactive planner → Action. Exit: AI drafts colonists and responds to a raid unattended.
 - **M4 — Tactical planner.** Work priorities, bills, zones via LLM tool calls. Exit: colony runs 5 game-days without human input, no starvation.
 - **M5 — Memory + Strategic planner.** Embedding retrieval feeding strategic prompts. Exit: research + expansion decisions reference past events.
