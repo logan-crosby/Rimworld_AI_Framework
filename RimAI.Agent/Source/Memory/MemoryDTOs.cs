@@ -1,7 +1,50 @@
+using System;
 using System.Collections.Generic;
 
 namespace RimAI.Agent.Memory
 {
+    // --- Planner Tier ---
+    // TODO(impl): PlannerTier — enumeration mapping to the three cognition planning tiers.
+    //   Reactive: 10 events, no semantic retrieval, 300 tokens — event-driven combat/medical scope.
+    //   Tactical: 30 events + top 3 semantic matches, 800 tokens — work/bill/zone/designation scope.
+    //   Strategic: 50 events + top 10 semantic matches, 1,500 tokens — research/trade/caravan scope.
+    public enum PlannerTier
+    {
+        Reactive,       // TODO(impl): 10 events, no semantic retrieval,     300 tokens
+        Tactical,       // TODO(impl): 30 events + top 3 semantic matches,   800 tokens
+        Strategic       // TODO(impl): 50 events + top 10 semantic matches,  1,500 tokens
+    }
+
+    // --- Working Memory Context ---
+    // TODO(impl): WorkingMemoryContext — assembled context returned by IWorkingMemory.AssembleAsync.
+    //   PromptPrefix is the assembled text for the LLM system message.
+    //   ReferencedEpisodeIds tracks which episodes were used, for future context window management.
+    public class WorkingMemoryContext
+    {
+        // TODO(impl): PromptPrefix — assembled text for LLM system message
+        public string PromptPrefix { get; init; }
+
+        // TODO(impl): EstimatedTokens — approximate token count of the assembled context
+        public int EstimatedTokens { get; init; }
+
+        // TODO(impl): ReferencedEpisodeIds — Episode.Id values included in this context
+        public List<long> ReferencedEpisodeIds { get; init; }
+
+        // TODO(impl): AssembledAt — UTC timestamp when this context was assembled
+        public DateTime AssembledAt { get; init; }
+    }
+
+    // --- Memory Retrieval Result ---
+    // TODO(impl): MemoryRetrievalResult — a single result from IMemoryRetrieval.SearchAsync.
+    //   Contains the matched episode and its cosine similarity score (0–1).
+    public class MemoryRetrievalResult
+    {
+        // TODO(impl): Episode — the matched episodic entry from the event log
+        public EpisodicEntry Episode { get; init; }
+
+        // TODO(impl): Similarity — cosine similarity score, 0–1 range
+        public float Similarity { get; init; }
+    }
     /// <summary>
     /// Atomic memory event recorded from Perception events or snapshot diffs.
     /// Appended to the episodic event log on the main thread.
