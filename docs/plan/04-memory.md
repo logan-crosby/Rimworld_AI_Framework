@@ -1,6 +1,7 @@
 # 04 — Memory Layer Spec
 
 **Status:** authoritative implementation spec for M5
+**Amendments (06-plan-audit.md wins):** `PlannerTier` is renamed to the canonical **`CognitionTier`** in `RimAI.Agent.Shared` (G-10). Memory calls the embedding API via **`ILlmClient.EmbedAsync`** (G-07), not static `RimAIApi` — "only layer that directly calls RimAIApi" in §1 reads as "via ILlmClient".
 **Namespace:** `RimAI.Agent.Memory`
 **Depends on:** RimAI.Framework (`RimAIApi.GetEmbeddingsAsync`), Perception (`EventBus`, `SnapshotDiff`)
 **Start from:** `RimAI.Agent/Source/Memory/` skeleton stubs (`// TODO(impl)` contracts)

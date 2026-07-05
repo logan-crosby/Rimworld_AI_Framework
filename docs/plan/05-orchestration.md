@@ -39,7 +39,8 @@ The Orchestrator is the `Verse.GameComponent` that drives the entire AI loop, co
 
 | Override | Responsibility |
 |---|---|
-| `GameComponentUpdate()` | Primary tick loop -- five phases executed sequentially |
+| `GameComponentTick()` | Primary tick loop -- five phases executed sequentially (game-time; does not run while paused) |
+| `GameComponentUpdate()` | Real-time-only concerns: confirmation-dialog countdown while paused (06 G-09) |
 | `ExposeData()` | Serialize/deserialize cadence state, budget state, decision log ring buffer |
 | `FinalizeInit()` | Wire up EventBus subscriptions, restore cadence from deserialized state |
 
@@ -62,10 +63,14 @@ The Orchestrator is the `Verse.GameComponent` that drives the entire AI loop, co
 | Tier | Trigger | Game-time cadence | Tick equivalent |
 |---|---|---|---|
 | Reactive | `EventBus.Publish(PerceptionEvent)`, `CriticalLevel >= Medium` | <1 game-hour | Next tick |
-| Tactical | Scheduled timer | ~every 6 game-hours | 60,000 ticks |
+| Tactical | Scheduled timer | ~every 6 game-hours | 15,000 ticks (2,500/game-hour — see 06 G-08) |
 | Strategic | Scheduled timer | ~every 2 game-days | 120,000 ticks |
 
-**Cooldown:** `CadenceState` DTO tracks `LastReactiveTick`, `LastTacticalTick`, `LastStrategicTick`, `MinimumSpacingTicks = 5000` (~0.5 game-hours). Each `ShouldFire*()` checks its tier's cooldown PLUS the minimum spacing against all tiers to prevent cognition storming. If reactive and tactical are both due on the same tick, reactive wins priority.
+**Cooldown:** `CadenceState` DTO tracks `LastReactiveTick`, `LastTacticalTick`, `LastStrategicTick`, `MinimumSpacingTicks = 5000` (~2 game-hours). Tactical/Strategic `ShouldFire*()` check their tier's cooldown PLUS the minimum spacing against all tiers to prevent cognition storming. **Reactive is exempt from cross-tier spacing** — it has only a 600-tick self-cooldown so raid response is never delayed by a recent tactical fire (06 G-15). If reactive and tactical are both due on the same tick, reactive wins priority.
+
+**Concurrency (06 G-17):** max one in-flight planning session per tier; a tier with a running session skips its cadence check. Reactive events arriving mid-session are coalesced (keep highest criticality, re-fire on session return). Commands carry `SnapshotTick`; Action rejects commands from snapshots older than 15,000 ticks.
+
+**Circuit breaker (06 G-18):** per-tier real-time LLM timeouts (Reactive 60s / Tactical 120s / Strategic 180s) via CancellationTokenSource. ≥5 consecutive PlanResult failures across tiers → AI auto-pauses + player letter; manual resume; breaker state not persisted.
 
 **Force-trigger API:** `ForceTriggerReactive(GameAlert)`, `ForceTriggerTactical()`, `ForceTriggerStrategic()`, `ResetAllCooldowns()`.
 
@@ -233,7 +238,7 @@ namespace RimAI.Agent.Orchestration
 
 | Scenario | Behavior |
 |---|---|
-| **Save/load mid-thought** | Cancel in-flight Tasks. Deserialize cadence from ExposeData; re-evaluate next tick. Queued commands preserved. |
+| **Save/load mid-thought** | Cancel in-flight Tasks. Deserialize cadence from ExposeData; re-evaluate next tick. Queued commands **dropped** — they were planned against a stale snapshot; next cadence replans (06 G-16). |
 | **Pause/resume AI** | Pause cancels Tasks + clears queue, preserves state. Resume restores cadence; no retroactive catch-up. |
 | **Mod unload** | Cancel all Tasks, dispose CancellationTokenSources, null static refs. |
 | **Budget exhaustion** | All tiers deactivate. On-screen notification "RimAI daily budget exhausted until midnight (Day X)." Reactive active until tokens AND calls both hit 0. |
