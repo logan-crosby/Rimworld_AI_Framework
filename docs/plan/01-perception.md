@@ -272,4 +272,39 @@ Perception never calls `RimAIApi` directly.
 
 ---
 
+## 8. Snapshot Engine Interface
+
+The snapshot-taking bridge from game state to the AI pipeline. Reads Verse/Pawn/Map data on the main thread
+and produces DTOs — never writes game state. All Verse types stay inside the implementation; callers only see DTOs.
+
+```csharp
+namespace RimAI.Agent.Perception {
+    public interface IPerceptionEngine
+    {
+        /// <summary>
+        /// Take a read-only main-thread snapshot from Find.CurrentMap.
+        /// Returns ColonySnapshot with all sub-DTOs populated.
+        /// Handles empty colony (Pawns empty list, not null).
+        /// Caps lists: 8 colonists + 5 hostiles + 5 animals max; resources 30 max; rooms 5 max.
+        /// Null fields omitted by JSON serialization (JsonIgnoreCondition.WhenWritingNull).
+        /// Snapshot budget ~4K tokens (≈14–18KB minified JSON for 5-colonist colony).
+        /// </summary>
+        ColonySnapshot TakeSnapshot(ColonySnapshot prev);
+
+        /// <summary>
+        /// Compute delta between two snapshots. Identifies added/removed/changed pawns
+        /// and resource deltas. Uses long for chronological comparisons (tick overflow safety).
+        /// </summary>
+        SnapshotDiff DiffSnapshots(ColonySnapshot prev, ColonySnapshot current);
+    }
+}
+```
+
+- [ ] `TakeSnapshot` returns valid DTO from Find.CurrentMap on main thread
+- [ ] `DiffSnapshots` correctly identifies pawn adds/removes/changes and resource deltas
+- [ ] All Verse types stay inside implementation; callers only see DTOs
+- [ ] Null fields omitted by JSON serialization
+
+---
+
 STATUS: DOCS-A PASS — 222 lines
