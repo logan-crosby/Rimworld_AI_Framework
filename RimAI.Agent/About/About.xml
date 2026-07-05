@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ModMetaData>
+  <name>RimAI Agent</name>
+  <author>Kilokio</author>
+  <supportedVersions>
+    <li>1.6</li>
+  </supportedVersions>
+  <packageId>kilokio.rimai.agent</packageId>
+  <modVersion>0.1.0</modVersion>
+  <description>
+The AI gameplay agent for RimWorld. Adds AI-controlled colony management powered by LLMs. Requires RimAI Framework.
+  </description>
+  <modDependencies>
+    <li>
+      <packageId>kilokio.rimai.framework</packageId>
+      <displayName>RimAI Framework</displayName>
+    </li>
+  </modDependencies>
+</ModMetaData>
