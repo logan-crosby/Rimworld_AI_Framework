@@ -131,22 +131,45 @@ namespace RimAI.Framework.Core
                     if (batchResult.IsFailure)
                         return batchResult; // propagate error
 
-                    // Map results to inputs (provider should return embeddings aligned to input order)
+                    // Map results to inputs by authoritative response index with deterministic validation
                     var data = batchResult.Value.Data;
+                    // Build lookup keyed by authoritative index; duplicate indices fail clearly
+                    var dataByIndex = new Dictionary<int, EmbeddingResult>();
+                    foreach (var e in data)
+                    {
+                        if (dataByIndex.ContainsKey(e.Index))
+                        {
+                            return Result<UnifiedEmbeddingResponse>.Failure($"Duplicate index {e.Index} in embedding response — malformed index set.");
+                        }
+                        dataByIndex.Add(e.Index, e);
+                    }
+                    // Validate: all expected positional indices present, none out of range
+                    for (int i = 0; i < batch.Count; i++)
+                    {
+                        if (!dataByIndex.ContainsKey(i))
+                        {
+                            return Result<UnifiedEmbeddingResponse>.Failure($"Missing index {i} in embedding response — incomplete index set.");
+                        }
+                    }
+                    foreach (var kv in dataByIndex)
+                    {
+                        if (kv.Key < 0 || kv.Key >= batch.Count)
+                        {
+                            return Result<UnifiedEmbeddingResponse>.Failure($"Index {kv.Key} out of range [0, {batch.Count - 1}] in embedding response — malformed index set.");
+                        }
+                    }
+                    // Map each input by its authoritative index
                     for (int i = 0; i < batch.Count; i++)
                     {
                         var s = batch[i];
-                        var e = data.ElementAtOrDefault(i);
-                        if (e != null)
-                        {
-                            var perInput = new EmbeddingResult { Index = 0, Embedding = e.Embedding };
-                            newResults[s] = perInput;
-                            // write per-input cache as single-entry response
-                            var singleResponse = new UnifiedEmbeddingResponse { Data = new List<EmbeddingResult> { new EmbeddingResult { Index = 0, Embedding = e.Embedding } } };
-                            var key = CacheKeyBuilder.BuildEmbeddingKey(s, config);
-                            if (cacheEnabled)
-                                await _cache.SetAsync(key, singleResponse, GetCacheTtl(), cancellationToken);
-                        }
+                        var e = dataByIndex[i];
+                        var perInput = new EmbeddingResult { Index = 0, Embedding = e.Embedding };
+                        newResults[s] = perInput;
+                        // write per-input cache as single-entry response
+                        var singleResponse = new UnifiedEmbeddingResponse { Data = new List<EmbeddingResult> { new EmbeddingResult { Index = 0, Embedding = e.Embedding } } };
+                        var key = CacheKeyBuilder.BuildEmbeddingKey(s, config);
+                        if (cacheEnabled)
+                            await _cache.SetAsync(key, singleResponse, GetCacheTtl(), cancellationToken);
                     }
                 }
             }

@@ -10,13 +10,29 @@ namespace RimAI.Framework.Configuration
     /// </summary>
     public static class BuiltInTemplates
     {
+        // Cloud providers: require API key via Bearer auth header
         private static readonly HttpConfig OpenAiHttpConfig = new HttpConfig { AuthHeader = "Authorization", AuthScheme = "Bearer", Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } } };
+        // Local providers: no auth required (localhost services don't need API keys)
+        private static readonly HttpConfig LocalHttpConfig = new HttpConfig { Headers = new Dictionary<string, string> { { "Content-Type", "application/json" } } };
+        // Full request paths including typical_p (only for providers that explicitly support it, e.g. Gemini)
         private static readonly ChatRequestPaths OpenAiChatRequestPaths = new ChatRequestPaths {
             Model = "model",
             Messages = "messages",
             Temperature = "temperature",
             TopP = "top_p",
             TypicalP = "typical_p",
+            MaxTokens = "max_tokens",
+            Stream = "stream",
+            Tools = "tools",
+            ToolChoice = "tool_choice"
+        };
+        // Request paths WITHOUT typical_p for providers that don't support it
+        private static readonly ChatRequestPaths OpenAiChatRequestPathsNoTypicalP = new ChatRequestPaths {
+            Model = "model",
+            Messages = "messages",
+            Temperature = "temperature",
+            TopP = "top_p",
+            TypicalP = null,
             MaxTokens = "max_tokens",
             Stream = "stream",
             Tools = "tools",
@@ -41,13 +57,13 @@ namespace RimAI.Framework.Configuration
             {
                 ProviderName = "OpenAI-compatible",
                 ProviderUrl = "https://example.com",
-                Http = OpenAiHttpConfig,
+                Http = LocalHttpConfig,
                 ChatApi = new ChatApiConfig
                 {
                     Endpoint = "http://localhost:8080/v1/chat/completions",
                     DefaultModel = "default-model",
-                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, typical_p = 1.0, max_tokens = 300 }),
-                    RequestPaths = OpenAiChatRequestPaths,
+                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, max_tokens = 300 }),
+                    RequestPaths = OpenAiChatRequestPathsNoTypicalP,
                     ResponsePaths = OpenAiChatResponsePaths,
                     ToolPaths = OpenAiToolPaths,
                     JsonMode = OpenAiJsonMode
@@ -57,13 +73,13 @@ namespace RimAI.Framework.Configuration
             {
                 ProviderName = "Ollama",
                 ProviderUrl = "https://ollama.com/",
-                Http = OpenAiHttpConfig,
+                Http = LocalHttpConfig,
                 ChatApi = new ChatApiConfig
                 {
                     Endpoint = "http://localhost:11434/v1/chat/completions",
                     DefaultModel = "llama3",
-                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, typical_p = 1.0, max_tokens = 300 }),
-                    RequestPaths = OpenAiChatRequestPaths,
+                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, max_tokens = 300 }),
+                    RequestPaths = OpenAiChatRequestPathsNoTypicalP,
                     ResponsePaths = OpenAiChatResponsePaths,
                     ToolPaths = OpenAiToolPaths,
                     JsonMode = OpenAiJsonMode
@@ -73,13 +89,13 @@ namespace RimAI.Framework.Configuration
             {
                 ProviderName = "LM Studio",
                 ProviderUrl = "https://lmstudio.ai/",
-                Http = OpenAiHttpConfig,
+                Http = LocalHttpConfig,
                 ChatApi = new ChatApiConfig
                 {
                     Endpoint = "http://localhost:1234/v1/chat/completions",
                     DefaultModel = "loaded-model",
-                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, typical_p = 1.0, max_tokens = 300 }),
-                    RequestPaths = OpenAiChatRequestPaths,
+                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, max_tokens = 300 }),
+                    RequestPaths = OpenAiChatRequestPathsNoTypicalP,
                     ResponsePaths = OpenAiChatResponsePaths,
                     ToolPaths = OpenAiToolPaths,
                     JsonMode = OpenAiJsonMode
@@ -89,13 +105,13 @@ namespace RimAI.Framework.Configuration
             {
                 ProviderName = "vLLM",
                 ProviderUrl = "https://github.com/vllm-project/vllm",
-                Http = OpenAiHttpConfig,
+                Http = LocalHttpConfig,
                 ChatApi = new ChatApiConfig
                 {
                     Endpoint = "http://localhost:8000/v1/chat/completions",
                     DefaultModel = "loaded-model",
-                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, typical_p = 1.0, max_tokens = 300 }),
-                    RequestPaths = OpenAiChatRequestPaths,
+                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, max_tokens = 300 }),
+                    RequestPaths = OpenAiChatRequestPathsNoTypicalP,
                     ResponsePaths = OpenAiChatResponsePaths,
                     ToolPaths = OpenAiToolPaths,
                     JsonMode = OpenAiJsonMode
@@ -105,13 +121,13 @@ namespace RimAI.Framework.Configuration
             {
                 ProviderName = "SGLang",
                 ProviderUrl = "https://github.com/sgl-project/sglang",
-                Http = OpenAiHttpConfig,
+                Http = LocalHttpConfig,
                 ChatApi = new ChatApiConfig
                 {
                     Endpoint = "http://localhost:30000/v1/chat/completions",
                     DefaultModel = "loaded-model",
-                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, typical_p = 1.0, max_tokens = 300 }),
-                    RequestPaths = OpenAiChatRequestPaths,
+                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, max_tokens = 300 }),
+                    RequestPaths = OpenAiChatRequestPathsNoTypicalP,
                     ResponsePaths = OpenAiChatResponsePaths,
                     ToolPaths = OpenAiToolPaths,
                     JsonMode = OpenAiJsonMode
@@ -128,8 +144,8 @@ namespace RimAI.Framework.Configuration
                 {
                     Endpoint = "https://api.groq.com/openai/v1/chat/completions",
                     DefaultModel = "llama3-70b-8192",
-                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, typical_p = 1.0, max_tokens = 8192 }),
-                    RequestPaths = OpenAiChatRequestPaths,
+                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, max_tokens = 8192 }),
+                    RequestPaths = OpenAiChatRequestPathsNoTypicalP,
                     ResponsePaths = OpenAiChatResponsePaths,
                     ToolPaths = OpenAiToolPaths,
                     JsonMode = OpenAiJsonMode
@@ -144,8 +160,8 @@ namespace RimAI.Framework.Configuration
                 {
                     Endpoint = "https://api.anthropic.com/v1/chat/completions",
                     DefaultModel = "claude-3-5-sonnet-latest",
-                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, typical_p = 1.0, max_tokens = 300 }),
-                    RequestPaths = OpenAiChatRequestPaths,
+                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, max_tokens = 300 }),
+                    RequestPaths = OpenAiChatRequestPathsNoTypicalP,
                     ResponsePaths = OpenAiChatResponsePaths,
                     ToolPaths = OpenAiToolPaths,
                     JsonMode = OpenAiJsonMode
@@ -177,8 +193,8 @@ namespace RimAI.Framework.Configuration
                 {
                     Endpoint = "https://api.deepseek.com/v1/chat/completions",
                     DefaultModel = "deepseek-chat",
-                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, typical_p = 1.0, max_tokens = 300 }),
-                    RequestPaths = OpenAiChatRequestPaths,
+                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, max_tokens = 300 }),
+                    RequestPaths = OpenAiChatRequestPathsNoTypicalP,
                     ResponsePaths = OpenAiChatResponsePaths,
                     ToolPaths = OpenAiToolPaths,
                     JsonMode = OpenAiJsonMode
@@ -193,8 +209,8 @@ namespace RimAI.Framework.Configuration
                 {
                     Endpoint = "https://api.siliconflow.cn/v1/chat/completions",
                     DefaultModel = "Qwen/Qwen3-30B-A3B-Instruct-2507",
-                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, typical_p = 1.0, max_tokens = 300 }),
-                    RequestPaths = OpenAiChatRequestPaths,
+                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, max_tokens = 300 }),
+                    RequestPaths = OpenAiChatRequestPathsNoTypicalP,
                     ResponsePaths = OpenAiChatResponsePaths,
                     ToolPaths = OpenAiToolPaths,
                     JsonMode = OpenAiJsonMode
@@ -209,8 +225,8 @@ namespace RimAI.Framework.Configuration
                 {
                     Endpoint = "https://api.openai.com/v1/chat/completions",
                     DefaultModel = "gpt-4o",
-                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, typical_p = 1.0, max_tokens = 300 }),
-                    RequestPaths = OpenAiChatRequestPaths,
+                    DefaultParameters = JObject.FromObject(new { temperature = 0.7, top_p = 1.0, max_tokens = 300 }),
+                    RequestPaths = OpenAiChatRequestPathsNoTypicalP,
                     ResponsePaths = OpenAiChatResponsePaths,
                     ToolPaths = OpenAiToolPaths,
                     JsonMode = OpenAiJsonMode
@@ -228,7 +244,7 @@ namespace RimAI.Framework.Configuration
             {
                 ProviderName = "OpenAI-compatible",
                 ProviderUrl = "https://example.com",
-                Http = OpenAiHttpConfig,
+                Http = LocalHttpConfig,
                 EmbeddingApi = new EmbeddingApiConfig
                 {
                     Endpoint = "http://localhost:8080/v1/embeddings",
@@ -242,7 +258,7 @@ namespace RimAI.Framework.Configuration
             {
                 ProviderName = "Ollama",
                 ProviderUrl = "https://ollama.com/",
-                Http = OpenAiHttpConfig,
+                Http = LocalHttpConfig,
                 EmbeddingApi = new EmbeddingApiConfig
                 {
                     Endpoint = "http://localhost:11434/v1/embeddings",
@@ -256,7 +272,7 @@ namespace RimAI.Framework.Configuration
             {
                 ProviderName = "LM Studio",
                 ProviderUrl = "https://lmstudio.ai/",
-                Http = OpenAiHttpConfig,
+                Http = LocalHttpConfig,
                 EmbeddingApi = new EmbeddingApiConfig
                 {
                     Endpoint = "http://localhost:1234/v1/embeddings",
@@ -270,7 +286,7 @@ namespace RimAI.Framework.Configuration
             {
                 ProviderName = "vLLM",
                 ProviderUrl = "https://github.com/vllm-project/vllm",
-                Http = OpenAiHttpConfig,
+                Http = LocalHttpConfig,
                 EmbeddingApi = new EmbeddingApiConfig
                 {
                     Endpoint = "http://localhost:8000/v1/embeddings",
@@ -284,7 +300,7 @@ namespace RimAI.Framework.Configuration
             {
                 ProviderName = "SGLang",
                 ProviderUrl = "https://github.com/sgl-project/sglang",
-                Http = OpenAiHttpConfig,
+                Http = LocalHttpConfig,
                 EmbeddingApi = new EmbeddingApiConfig
                 {
                     Endpoint = "http://localhost:30000/v1/embeddings",

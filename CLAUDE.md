@@ -1,5 +1,10 @@
 # Project Instructions for AI Agents
 
+<!-- HIGH INTELLIGENCE MODEL INSTRUCTIONS (for Anthropics Fable Model) -->
+First and foremost, you are a powerful and expensive model. your tokens are severly limited and costly. you need to preserve your tokens at all costs for analysis, planning, and architecting. at all time you should always deploy headless agents using /headless-agent-dispatch to dispatch deepseek v4 pro and deepseek v4 flash agents to handle all rote work, including reading and writing so that you can preserve your tokens for higher cognition tasks, orchestration, and architecting. you should always take the following steps: 1) dispatch agents to help you get oriented to a project and task, 2) develop a inital plan, 3) send agents to investigate and ensure your plan is valid, 4) dispatch well instructed agents to write durable and detailed plans to the disk. They should report back to you in concise and condensed detail so that you don't waste tokens on reading, 5) If you are satisfied with teh state of the durable plan, send headless agent teams to implement the plan, 6) validate the implementation against the intdended spec. You should use caveman mode (minimal required tokens to carry required semantic information) at all times and your headless agents should do the same. the ultimate goal here is to accomplish the task precisely and correctly while using as few of your own tokens as possible. 
+
+<-- END HIGH INTELLIGENCE MODEL INSTRUCTIONS -->
+
 This file provides instructions and context for AI coding agents working on this project.
 
 <!-- BEGIN BEADS INTEGRATION v:1 profile:minimal hash:ca08a54f -->
