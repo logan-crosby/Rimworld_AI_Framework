@@ -31,5 +31,14 @@ namespace RimAI.Framework.Execution.Models
         /// 默认值为 true。
         /// </summary>
         public bool UseExponentialBackoff { get; set; } = true;
+
+        /// <summary>
+        /// Per-request timeout applied to each individual HTTP attempt via CancellationToken.
+        /// When this timeout fires, the attempt is treated as retryable (unlike caller cancellation
+        /// which fails immediately). This is distinct from HttpClient.Timeout and gives finer-grained
+        /// control over individual retry attempts.
+        /// Default is 30 seconds. Set to TimeSpan.Zero to disable per-request timeouts.
+        /// </summary>
+        public TimeSpan PerRequestTimeout { get; set; } = TimeSpan.FromSeconds(30);
     }
 }

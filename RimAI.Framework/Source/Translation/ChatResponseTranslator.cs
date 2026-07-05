@@ -47,7 +47,7 @@ namespace RimAI.Framework.Translation
                         yield return chunk;
                     }
                 }
-                
+
                 if (!string.IsNullOrEmpty(finishReason))
                 {
                     // Emit a pure final chunk with only FinishReason to avoid duplicating last delta
@@ -78,7 +78,7 @@ namespace RimAI.Framework.Translation
                 return new UnifiedChatResponse { Message = new ChatMessage { Content = $"Error: Invalid JSON response from server. Details: {ex.Message}" } };
             }
         }
-        
+
         private async Task<UnifiedChatResponse> TranslateAndAggregateStreamAsync(HttpResponseMessage httpResponse, MergedChatConfig config, CancellationToken cancellationToken)
         {
             var finalMessage = new ChatMessage { Role = "assistant", Content = "" };
@@ -93,7 +93,7 @@ namespace RimAI.Framework.Translation
                 if (!string.IsNullOrEmpty(chunk.FinishReason))
                     finalFinishReason = chunk.FinishReason;
             }
-            
+
             return new UnifiedChatResponse { Message = finalMessage, FinishReason = finalFinishReason };
         }
 
@@ -109,7 +109,7 @@ namespace RimAI.Framework.Translation
             var messageToken = firstChoice.SelectToken("message");
             var content = messageToken?.SelectToken("content")?.ToString();
             var toolCallsToken = messageToken?.SelectToken("tool_calls");
-            
+
             var toolCalls = toolCallsToken?.ToObject<List<ToolCall>>();
 
             var finishReason = firstChoice.SelectToken(config.Template.ChatApi.ResponsePaths.FinishReason)?.ToString();
@@ -120,7 +120,7 @@ namespace RimAI.Framework.Translation
                 Message = new ChatMessage { Role = "assistant", Content = content, ToolCalls = toolCalls }
             };
         }
-        
+
         private UnifiedChatChunk ParseJObjectToChunk(JObject jObject, MergedChatConfig config)
         {
             if (jObject == null) return null;
@@ -153,6 +153,7 @@ namespace RimAI.Framework.Translation
             // 禁用流读取的缓冲合并，尽量低延迟（默认 ReadLineAsync 已逐行，但明确注释意图）
 
             string pendingData = null;
+            string lastProviderFinishReason = null; // preserve provider reason across [DONE]
             while (!reader.EndOfStream)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -177,7 +178,9 @@ namespace RimAI.Framework.Translation
                         if (jObject != null)
                         {
                             var finishReason = jObject.SelectToken(config.Template.ChatApi.ResponsePaths.Choices)?.FirstOrDefault()
-                                                   ?.SelectToken(config.Template.ChatApi.ResponsePaths.FinishReason)?.ToString();
+                                                       ?.SelectToken(config.Template.ChatApi.ResponsePaths.FinishReason)?.ToString();
+                            if (!string.IsNullOrEmpty(finishReason))
+                                lastProviderFinishReason = finishReason;
                             yield return (jObject, finishReason);
                         }
                         pendingData = null;
@@ -196,7 +199,8 @@ namespace RimAI.Framework.Translation
                 var data = line.Substring(6);
                 if (data == "[DONE]")
                 {
-                    yield return (null, "stop");
+                    // Preserve the provider's finish reason; only fall back to "stop" if none was seen.
+                    yield return (null, lastProviderFinishReason ?? "stop");
                     break;
                 }
 
@@ -214,6 +218,8 @@ namespace RimAI.Framework.Translation
                 {
                     var finishReason = jObject.SelectToken(config.Template.ChatApi.ResponsePaths.Choices)?.FirstOrDefault()
                                            ?.SelectToken(config.Template.ChatApi.ResponsePaths.FinishReason)?.ToString();
+                    if (!string.IsNullOrEmpty(finishReason))
+                        lastProviderFinishReason = finishReason;
                     yield return (jObject, finishReason);
                 }
             }

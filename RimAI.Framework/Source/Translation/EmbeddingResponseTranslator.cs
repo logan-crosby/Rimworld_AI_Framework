@@ -39,6 +39,7 @@ namespace RimAI.Framework.Translation
                 }
 
                 var results = new List<EmbeddingResult>();
+                int positionalFallback = 0;
                 foreach (var item in dataArray)
                 {
                     var embeddingToken = item.SelectToken(embeddingPath);
@@ -59,11 +60,15 @@ namespace RimAI.Framework.Translation
                         }
                     }
 
+                    // Use authoritative response index when available; positional fallback only when index path is absent
+                    var idxToken = item.SelectToken(indexPath);
+                    int index = idxToken != null ? idxToken.Value<int>() : positionalFallback;
                     results.Add(new EmbeddingResult
                     {
                         Embedding = embeddingFloats,
-                        Index = item.SelectToken(indexPath)?.Value<int>() ?? 0
+                        Index = index
                     });
+                    positionalFallback++;
                 }
 
                 return Result<UnifiedEmbeddingResponse>.Success(new UnifiedEmbeddingResponse { Data = results });
