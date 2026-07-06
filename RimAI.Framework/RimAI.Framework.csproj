@@ -23,6 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <!-- Unit tests exercise internal helpers (e.g. Translation.UsageParser) -->
+    <InternalsVisibleTo Include="RimAI.Agent.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\RimAI.Framework.Contracts\RimAI.Framework.Contracts.csproj" />
   </ItemGroup>
 

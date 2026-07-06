@@ -67,6 +67,17 @@ namespace RimAI.Framework.Contracts
     #region 统一聊天响应 (Unified Chat Response)
 
     /// <summary>
+    /// Token 用量信息。当提供商未返回用量时为 null（调用方需自行估算）。
+    /// Token usage reported by the provider; null when the provider omits it.
+    /// </summary>
+    public class UsageInfo
+    {
+        public int? PromptTokens { get; set; }
+        public int? CompletionTokens { get; set; }
+        public int? TotalTokens { get; set; }
+    }
+
+    /// <summary>
     /// 非流式聊天完整响应。
     /// </summary>
     public class UnifiedChatResponse
@@ -80,6 +91,11 @@ namespace RimAI.Framework.Contracts
         /// AI 生成的回复消息。
         /// </summary>
         public ChatMessage Message { get; set; }
+
+        /// <summary>
+        /// Token 用量。提供商未返回时为 null。
+        /// </summary>
+        public UsageInfo Usage { get; set; }
     }
 
     /// <summary>
@@ -90,6 +106,11 @@ namespace RimAI.Framework.Contracts
         public string ContentDelta { get; set; }
         public string FinishReason { get; set; }
         public List<ToolCall> ToolCalls { get; set; }
+
+        /// <summary>
+        /// Token 用量。通常仅出现在流的最后一个数据块；其余块为 null。
+        /// </summary>
+        public UsageInfo Usage { get; set; }
     }
 
     #endregion

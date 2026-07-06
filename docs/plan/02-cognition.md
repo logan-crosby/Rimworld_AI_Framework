@@ -1,6 +1,7 @@
 # 02 — Cognition Layer Spec
 
 **Status:** draft | **Implements:** RimAI.Agent.Cognition
+**Amendments (06-plan-audit.md wins):** `PlanningTier` is renamed to the canonical **`CognitionTier`** in `RimAI.Agent.Shared` (G-10). `GameAlert` does not exist — reactive signatures take **`PerceptionEvent trigger`** (G-11). Cognition calls the LLM via **`ILlmClient`** (G-07), never static `RimAIApi`. Tool catalog §6.1 is extended with the 10 unmapped command types + construction/growing/prisoner tools — post-audit total 41 (G-12, G-04).
 **Prerequisite specs:** 00-MASTER-PLAN.md, 01-perception.md, 04-memory.md
 **Consumed by:** 03-action.md, 05-orchestration.md
 
@@ -307,17 +308,18 @@ function ExecuteAsync(session):
 
         rounds++
 
+        messages.Add(response.Value.Message)  // assistant message FIRST (OpenAI wire order — 06 G-14)
+
         for each toolCall in response.Value.Message.ToolCalls:
             validated = ActionCommandValidator.Validate(toolCall)
             if validated.IsValid:
                 commands.Add(validated.Command)
-                // Feed success result back to LLM
-                messages.Add(toolResultMessage("ok", toolCall.Id))
+                // Honest ack: command is queued, not executed (06 G-14).
+                // Execution results reach the NEXT session via ActionFeedback → WorkingMemory.
+                messages.Add(toolResultMessage("accepted (queued for execution; result in next briefing)", toolCall.Id))
             else:
                 // Feed error back so LLM can correct
                 messages.Add(toolResultMessage("error: " + validated.Error, toolCall.Id))
-
-        messages.Add(response.Value.Message)  // assistant message with tool calls
 
     return PlanResult.Success(commands, rounds, tokensUsed)
 ```
