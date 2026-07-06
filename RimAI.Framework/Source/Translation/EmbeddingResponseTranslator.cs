@@ -71,7 +71,7 @@ namespace RimAI.Framework.Translation
                     positionalFallback++;
                 }
 
-                return Result<UnifiedEmbeddingResponse>.Success(new UnifiedEmbeddingResponse { Data = results });
+                return Result<UnifiedEmbeddingResponse>.Success(new UnifiedEmbeddingResponse { Data = results, Usage = UsageParser.TryParse(jObject) });
             }
             catch (JsonReaderException ex)
             {

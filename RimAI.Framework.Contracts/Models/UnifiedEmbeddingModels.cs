@@ -28,5 +28,10 @@ namespace RimAI.Framework.Contracts
     public class UnifiedEmbeddingResponse
     {
         public List<EmbeddingResult> Data { get; set; }
+
+        /// <summary>
+        /// Token 用量。提供商未返回时为 null。
+        /// </summary>
+        public UsageInfo Usage { get; set; }
     }
 }
