@@ -1,6 +1,7 @@
 # 01 — Perception Layer Spec
 
 **Status:** authoritative implementation spec for M1
+**Amendments (06-plan-audit.md wins):** snapshot schema **v2** adds `Buildings`, `Zones`, `Bills`, `NotableItems`, `Policies`, `Factions` DTOs — required so the LLM can reference the IDs the tool catalog demands (G-02); token budget rises to ~5K (ceiling 5,500). IDs minted via shared `EntityId` rule (G-03). `EventBus` gains `Clear()`; `FinalizeInit()` clears + re-subscribes to avoid stale static sinks across game loads (G-23). All layers read `Find.AnyPlayerHomeMap`, never `Find.CurrentMap` (G-24). Harmony package + About.xml dependency fixes are the first M1 task (G-05).
 **Namespace:** `RimAI.Agent.Perception`
 **Depends on:** RimAI.Framework (no other agent layers)
 **Start from:** `RimAI.Agent/Source/Perception/` skeleton stubs (`// TODO(impl)` contracts)

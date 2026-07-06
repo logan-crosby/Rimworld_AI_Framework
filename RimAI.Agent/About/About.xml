@@ -12,8 +12,18 @@ The AI gameplay agent for RimWorld. Adds AI-controlled colony management powered
   </description>
   <modDependencies>
     <li>
+      <packageId>brrainz.harmony</packageId>
+      <displayName>Harmony</displayName>
+      <steamWorkshopUrl>steam://url/CommunityFilePage/2009463077</steamWorkshopUrl>
+      <downloadUrl>https://github.com/pardeike/HarmonyRimWorld/releases/latest</downloadUrl>
+    </li>
+    <li>
       <packageId>kilokio.rimai.framework</packageId>
       <displayName>RimAI Framework</displayName>
     </li>
   </modDependencies>
+  <loadAfter>
+    <li>brrainz.harmony</li>
+    <li>kilokio.rimai.framework</li>
+  </loadAfter>
 </ModMetaData>

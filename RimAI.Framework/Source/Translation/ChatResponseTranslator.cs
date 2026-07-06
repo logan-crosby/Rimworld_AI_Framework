@@ -83,6 +83,7 @@ namespace RimAI.Framework.Translation
         {
             var finalMessage = new ChatMessage { Role = "assistant", Content = "" };
             string finalFinishReason = "stream_end";
+            UsageInfo finalUsage = null;
 
             await foreach (var chunk in TranslateStreamAsync(httpResponse, config, cancellationToken))
             {
@@ -92,9 +93,11 @@ namespace RimAI.Framework.Translation
                     finalMessage.ToolCalls = chunk.ToolCalls;
                 if (!string.IsNullOrEmpty(chunk.FinishReason))
                     finalFinishReason = chunk.FinishReason;
+                if (chunk.Usage != null)
+                    finalUsage = chunk.Usage; // providers send usage on the final data chunk
             }
 
-            return new UnifiedChatResponse { Message = finalMessage, FinishReason = finalFinishReason };
+            return new UnifiedChatResponse { Message = finalMessage, FinishReason = finalFinishReason, Usage = finalUsage };
         }
 
         private UnifiedChatResponse ParseJObjectToFinalResponse(JObject jObject, MergedChatConfig config)
@@ -117,7 +120,8 @@ namespace RimAI.Framework.Translation
             return new UnifiedChatResponse
             {
                 FinishReason = finishReason,
-                Message = new ChatMessage { Role = "assistant", Content = content, ToolCalls = toolCalls }
+                Message = new ChatMessage { Role = "assistant", Content = content, ToolCalls = toolCalls },
+                Usage = UsageParser.TryParse(jObject)
             };
         }
 
@@ -126,7 +130,13 @@ namespace RimAI.Framework.Translation
             if (jObject == null) return null;
 
             var firstChoice = jObject.SelectToken(config.Template.ChatApi.ResponsePaths.Choices)?.FirstOrDefault();
-            if (firstChoice == null) return null;
+            if (firstChoice == null)
+            {
+                // OpenAI stream_options.include_usage sends a final chunk with an
+                // empty choices array carrying only usage — don't drop it.
+                var usageOnly = UsageParser.TryParse(jObject);
+                return usageOnly != null ? new UnifiedChatChunk { Usage = usageOnly } : null;
+            }
 
             var deltaToken = firstChoice.SelectToken("delta");
             var contentDelta = deltaToken?.SelectToken(config.Template.ChatApi.ResponsePaths.Content)?.ToString();
@@ -142,7 +152,8 @@ namespace RimAI.Framework.Translation
             return new UnifiedChatChunk
             {
                 ContentDelta = contentDelta,
-                ToolCalls = toolCalls
+                ToolCalls = toolCalls,
+                Usage = UsageParser.TryParse(jObject)
             };
         }
 
