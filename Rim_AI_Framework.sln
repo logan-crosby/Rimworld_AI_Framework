@@ -6,6 +6,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RimAI.Framework", "RimAI.Fr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RimAI.Agent", "RimAI.Agent\RimAI.Agent.csproj", "{27F9C495-5867-4C08-BD76-190965137A42}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RimAI.Agent.Tests", "RimAI.Agent.Tests\RimAI.Agent.Tests.csproj", "{8B3D1F60-2A74-4E19-9C55-6E0A1D2B7C43}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -20,6 +22,10 @@ Global
 		{27F9C495-5867-4C08-BD76-190965137A42}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{27F9C495-5867-4C08-BD76-190965137A42}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{27F9C495-5867-4C08-BD76-190965137A42}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8B3D1F60-2A74-4E19-9C55-6E0A1D2B7C43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8B3D1F60-2A74-4E19-9C55-6E0A1D2B7C43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8B3D1F60-2A74-4E19-9C55-6E0A1D2B7C43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8B3D1F60-2A74-4E19-9C55-6E0A1D2B7C43}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
