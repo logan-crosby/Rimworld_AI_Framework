@@ -25,4 +25,31 @@
     <ProjectReference Include="..\RimAI.Framework.Contracts\RimAI.Framework.Contracts.csproj" />
   </ItemGroup>
 
+  <Target Name="DeployMod" AfterTargets="PostBuildEvent">
+    <PropertyGroup>
+      <RimWorldDir Condition="$([MSBuild]::IsOSPlatform('Windows')) and Exists('C:\Program Files (x86)\Steam\steamapps\common\RimWorld')">C:\Program Files (x86)\Steam\steamapps\common\RimWorld</RimWorldDir>
+      <RimWorldDir Condition="$([MSBuild]::IsOSPlatform('Windows')) and Exists('D:\SteamLibrary\steamapps\common\RimWorld')">D:\SteamLibrary\steamapps\common\RimWorld</RimWorldDir>
+      <RimWorldDir Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(HOME)/Library/Application Support/Steam/steamapps/common/RimWorld/RimWorldMac.app</RimWorldDir>
+      <RimWorldDir Condition="$([MSBuild]::IsOSPlatform('Linux'))">$(HOME)/.steam/steam/steamapps/common/RimWorld</RimWorldDir>
+      <RimWorldDir Condition="'$(RIMWORLD_DIR)' != ''">$(RIMWORLD_DIR)</RimWorldDir>
+      <ModDir>$(RimWorldDir)/Mods/RimAI_Agent</ModDir>
+    </PropertyGroup>
+
+    <Message Text="Deploying RimAI Agent to $(ModDir)" Importance="high" />
+    <RemoveDir Directories="$(ModDir)" />
+
+    <ItemGroup>
+      <AboutFiles Include="About\**\*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(AboutFiles)" DestinationFolder="$(ModDir)\About\%(RecursiveDir)" />
+    <Copy SourceFiles="loadFolders.xml" DestinationFolder="$(ModDir)" />
+
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(ModDir)\Assemblies" />
+    <Copy SourceFiles="$(ProjectDir)$(OutDir)$(AssemblyName).pdb"
+          DestinationFolder="$(ModDir)\Assemblies"
+          Condition="Exists('$(ProjectDir)$(OutDir)$(AssemblyName).pdb')" />
+
+    <Message Text="RimAI Agent successfully deployed!" Importance="high" />
+  </Target>
+
 </Project>
