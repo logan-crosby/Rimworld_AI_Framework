@@ -247,7 +247,7 @@ Perception never calls `RimAIApi` directly.
 
 ## 6. Acceptance Criteria — M1
 
-- [ ] `SnapshotBuilder.TakeSnapshot()` produces valid DTO from live game.
+- [x] `SnapshotBuilder.TakeSnapshot()` produces valid DTO from live game.
 - [x] Dev command `Dev: Dump ColonySnapshot JSON` writes minified JSON to RimWorld log.
 - [ ] 5-colonist snapshot ≤5,000 tokens (5,500 hard ceiling).
 - [x] `SnapshotDiffEngine.Compute(prev, curr)` correctly identifies added/removed/changed pawns + resource deltas.
@@ -302,7 +302,7 @@ namespace RimAI.Agent.Perception {
 }
 ```
 
-- [ ] `TakeSnapshot` returns valid DTO from Find.AnyPlayerHomeMap on main thread
+- [x] `TakeSnapshot` returns valid DTO from Find.AnyPlayerHomeMap on main thread
 - [x] `DiffSnapshots` correctly identifies pawn adds/removes/changes and resource deltas
 - [x] All Verse types stay inside implementation; callers only see DTOs
 - [x] Null fields omitted by JSON serialization

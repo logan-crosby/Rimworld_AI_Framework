@@ -1,3 +1,4 @@
+using RimAI.Agent.Perception;
 using Verse;
 
 namespace RimAI.Agent
@@ -12,15 +13,17 @@ namespace RimAI.Agent
 
         public override void GameComponentUpdate()
         {
-            // TODO(impl): five-phase tick —
-            //   1. Drain Events: dequeue PerceptionEvents from EventBus, filter CriticalLevel >= Medium for reactive
+            // M1 owns the main-thread boundary for deferred Harmony events.
+            // Later milestones extend this method with command and planner phases.
+            EventBus.DrainDeferred();
+
+            // TODO(impl): remaining five-phase tick —
             //   2. Process Commands: call IActionExecutor.ExecutePendingCommands() to drain marshalled queue
             //   3. Evaluate Cadence: check ShouldFireReactive/Tactical/Strategic on ICadenceScheduler
             //   4. Launch Planners: for each due tier where CanAfford(tier, estimate), fire Task.Run with CancellationToken
             //   5. Feed Results: marshall continuations to main thread via LongEventHandler.ExecuteWhenFinished,
             //      push ActionCommand[] to queue, log, deduct budget
             //   Main-thread safety: phases 1-3 synchronous; phase 4 DTO-only; phase 5 posted back to main thread
-            throw new System.NotImplementedException();
         }
 
         public override void ExposeData()
@@ -36,6 +39,8 @@ namespace RimAI.Agent
 
         public override void FinalizeInit()
         {
+            EventBus.Clear();
+
             // TODO(impl): wire up layers —
             //   Subscribe Memory.IMemoryLogger (IEventSink) to EventBus for event logging
             //   Restore cadence timers from deserialized ExposeData state
