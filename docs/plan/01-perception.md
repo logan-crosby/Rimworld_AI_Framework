@@ -16,7 +16,7 @@ Read-only main-thread bridge from game state to AI pipeline. Snapshots colony in
 
 ## 2. ColonySnapshot DTO Tree
 
-All DTOs in `RimAI.Agent.Perception.DTOs`. Serialized via `System.Text.Json` with `WriteIndented=false`, `JsonIgnoreCondition.WhenWritingNull` — null fields omitted. Budget: ~4K tokens (≈14–18KB minified JSON for typical 5-colonist colony).
+All DTOs live in `RimAI.Agent.Perception`. Serialized via Newtonsoft.Json with `Formatting.None` and `NullValueHandling.Ignore` — null fields omitted. Budget: ~5K tokens (5,500 ceiling) for a typical 5-colonist colony.
 
 ### 2.1 Root — `ColonySnapshot`
 
@@ -128,12 +128,13 @@ public class WeatherSnapshot {
 
 ```csharp
 public static class ColonySnapshotTrimmer {
-    public const int MaxTokens = 4096;  public const int MaxResourceEntries = 30;
-    public static string TrimToBudget(string serializedJson, int tokenBudget = MaxTokens);
+    public const int DefaultTokenBudget = 5000;
+    public const int TokenBudgetCeiling = 5500;
+    public static string TrimToBudget(string serializedJson, int tokenBudget = DefaultTokenBudget);
     public static int EstimateTokens(string json); // chars/4
 }
 ```
-**Trim order (drop first):** resources beyond 30 → rooms beyond top 3 → pawns beyond 8 → per-pawn: WorkSnapshot → EquipSnapshot → thoughts beyond 3 → skills beyond 3.
+**Trim order (drop first):** notable items → factions → buildings beyond 10 → bills beyond 10 → resources beyond 30 → rooms beyond top 3 → pawns beyond 8 → per-pawn: WorkSnapshot → EquipSnapshot → thoughts beyond 3 → skills beyond 3.
 
 ---
 
@@ -246,15 +247,15 @@ Perception never calls `RimAIApi` directly.
 
 ## 6. Acceptance Criteria — M1
 
-- [ ] `ColonySnapshotBuilder.TakeSnapshot()` produces valid DTO from live game.
-- [ ] Dev command `Dev: Dump ColonySnapshot JSON` writes minified JSON to RimWorld log.
-- [ ] 5-colonist snapshot ≤4,500 tokens (≈18KB).
-- [ ] `SnapshotDiffEngine.Compute(prev, curr)` correctly identifies added/removed/changed pawns + resource deltas.
-- [ ] `EventBus.Publish` delivers to all `IEventSink` subscribers same tick.
+- [ ] `SnapshotBuilder.TakeSnapshot()` produces valid DTO from live game.
+- [x] Dev command `Dev: Dump ColonySnapshot JSON` writes minified JSON to RimWorld log.
+- [ ] 5-colonist snapshot ≤5,000 tokens (5,500 hard ceiling).
+- [x] `SnapshotDiffEngine.Compute(prev, curr)` correctly identifies added/removed/changed pawns + resource deltas.
+- [x] `EventBus.Publish` delivers to all `IEventSink` subscribers same tick.
 - [ ] Harmony patches fire correct `PerceptionEventType` for raid letter, death, fire spawn.
-- [ ] `ColonySnapshotTrimmer.TrimToBudget` drops in order without throwing.
-- [ ] `dotnet build Rim_AI_Framework.sln` — 0 errors, 0 warnings.
-- [ ] Unit test: DTO serialize → deserialize → all fields match.
+- [x] `ColonySnapshotTrimmer.TrimToBudget` drops in order without throwing.
+- [x] `dotnet build Rim_AI_Framework.sln` — 0 errors, 0 warnings.
+- [x] Unit test: DTO serialize → deserialize → all fields match.
 
 ---
 
@@ -283,12 +284,12 @@ namespace RimAI.Agent.Perception {
     public interface IPerceptionEngine
     {
         /// <summary>
-        /// Take a read-only main-thread snapshot from Find.CurrentMap.
+        /// Take a read-only main-thread snapshot from Find.AnyPlayerHomeMap.
         /// Returns ColonySnapshot with all sub-DTOs populated.
         /// Handles empty colony (Pawns empty list, not null).
         /// Caps lists: 8 colonists + 5 hostiles + 5 animals max; resources 30 max; rooms 5 max.
         /// Null fields omitted by JSON serialization (JsonIgnoreCondition.WhenWritingNull).
-        /// Snapshot budget ~4K tokens (≈14–18KB minified JSON for 5-colonist colony).
+        /// Snapshot budget ~5K tokens (5,500 hard ceiling).
         /// </summary>
         ColonySnapshot TakeSnapshot(ColonySnapshot prev);
 
@@ -301,10 +302,30 @@ namespace RimAI.Agent.Perception {
 }
 ```
 
-- [ ] `TakeSnapshot` returns valid DTO from Find.CurrentMap on main thread
-- [ ] `DiffSnapshots` correctly identifies pawn adds/removes/changes and resource deltas
-- [ ] All Verse types stay inside implementation; callers only see DTOs
-- [ ] Null fields omitted by JSON serialization
+- [ ] `TakeSnapshot` returns valid DTO from Find.AnyPlayerHomeMap on main thread
+- [x] `DiffSnapshots` correctly identifies pawn adds/removes/changes and resource deltas
+- [x] All Verse types stay inside implementation; callers only see DTOs
+- [x] Null fields omitted by JSON serialization
+
+## 9. EntityId Contract (G-03 resolution)
+
+**Canonical definition.** Every entity reference shared between Perception and Action obeys one rule:
+
+| Entity type | ID format | Source |
+|---|---|---|
+| Pawns / Things / Buildings | `Thing.GetUniqueLoadID()` via `ILoadReferenceable` (e.g. `Thing_Human12345`) | Save-stable across save/load |
+| Zones / Areas | `"zone_" + Zone.ID` | Native int ID, typed prefix |
+| Bills | `"bill_" + Bill.loadID` | Native int ID, typed prefix |
+| Factions / Settlements | `"faction_" + Faction.loadID` / `"settlement_" + Settlement.ID` | Native int ID, typed prefix |
+
+Perception DTOs carry `entityId` (the stable string above) plus a human-readable `label`.
+No separate registry is maintained — the ID format itself encodes type and uniqueness.
+
+Action resolves `entityId` → live object at execution time on the main thread:
+1. Parse prefix to determine entity type.
+2. Look up object via RimWorld APIs (`Find.World`, `Map.mapPawns`, `ZoneManager`, etc.).
+3. Verify exists, spawned, and on the correct map.
+4. Dangling/stale IDs produce a structured `CommandResult` failure (`FailureCategory.EntityNotFound`) returned to Cognition — **never a throw.**
 
 ---
 

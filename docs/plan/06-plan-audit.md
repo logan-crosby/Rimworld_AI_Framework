@@ -39,14 +39,14 @@ public class FactionSnapshot  { string Name; int Goodwill; bool Hostile, CanTrad
 ```
 Trim order update (01 §2.5): NotableItems → Factions → Buildings beyond 10 → Bills beyond 10 → (existing chain). Token budget rises to **~5K**; acceptance ceiling 5,500 tokens.
 
-### G-03 — ID contract between Perception and Action is undefined
+### G-03 — ID contract between Perception and Action is undefined ✅ RESOLVED
 Nothing specifies how string IDs are minted or resolved. Without one shared rule, M2's resolver and M1's snapshots will disagree.
-**Resolution — single rule, new file `RimAI.Agent/Source/Shared/EntityId.cs` (namespace `RimAI.Agent.Shared`):**
-- Pawns/Things/Buildings: `Thing.ThingID` (e.g. `Human12345`, `TableMachining54321`). Stable across save/load.
-- Zones: `Zone.ID` int → `"zone_" + ID`.
-- Bills: `Bill.loadID` int → `"bill_" + loadID`.
+**Resolution:** Spec amendment applied — canonical `EntityId` contract now defined in [01-perception.md §9](01-perception.md#9-entityid-contract-g-03-resolution), referenced in [03-action.md §14](03-action.md#14-entityid-contract-g-03-resolution). Key rules:
+- Pawns/Things/Buildings: `Thing.GetUniqueLoadID()` via `ILoadReferenceable` (e.g. `Thing_Human12345`). Save-stable.
+- Zones: `Zone.ID` → `"zone_" + ID`.
+- Bills: `Bill.loadID` → `"bill_" + loadID`.
 - Factions: `Faction.loadID` → `"faction_" + loadID`; settlements: `Settlement.ID` similarly.
-- Action layer gets `IEntityResolver` (main-thread only): `TryResolvePawn(string id, Map, out Pawn)` etc. — one lookup helper used by every handler; returns `FailureCategory.EntityNotFound` on miss. Perception uses the same class to mint IDs. Shared code, zero drift.
+- Action resolves via `IEntityResolver` (main-thread): parse prefix → look up → verify exists+spawned+correct map. Dangling IDs → `CommandResult` with `FailureCategory.EntityNotFound`, never throw. No separate registry.
 
 ### G-04 — No construction capability, but M6 promises "landing → stable colony"
 `ActionCommandType` has no build/place command. Without construction the AI cannot make a freezer, defenses, or beds — M6 exit is unreachable.

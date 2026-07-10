@@ -1,12 +1,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFrameworks Condition="'$(OS)' == 'Windows_NT'">net472;net8.0</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">net8.0</TargetFrameworks>
     <RootNamespace>RimAI.Agent.Tests</RootNamespace>
     <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <!-- Tests exercise DTO/pure-logic code only — never Verse.Find.* (no game runtime here). -->
+    <!-- Tests exercise DTO/pure-logic code only — never Verse.Find.* (no game runtime here).
+         Windows also runs net472 with full game-facing project refs.
+         Non-Windows hosts run net8.0 only because the SDK has no .NET Framework test host. -->
   </PropertyGroup>
 
   <ItemGroup>
@@ -19,10 +21,26 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!-- net472: full project references (game-facing assemblies available) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <ProjectReference Include="..\RimAI.Agent\RimAI.Agent.csproj" />
     <ProjectReference Include="..\RimAI.Framework\RimAI.Framework.csproj" />
     <ProjectReference Include="..\RimAI.Framework.Contracts\RimAI.Framework.Contracts.csproj" />
+  </ItemGroup>
+
+  <!-- net8.0: Contracts (multi-targeted) + linked pure-logic source files (no game runtime) -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <ProjectReference Include="..\RimAI.Framework.Contracts\RimAI.Framework.Contracts.csproj" />
+    <Compile Include="..\RimAI.Agent\Source\Action\ActionCommand.cs" Link="Linked\RimAI.Agent\ActionCommand.cs" />
+    <Compile Include="..\RimAI.Framework\Source\Translation\UsageParser.cs" Link="Linked\RimAI.Framework\UsageParser.cs" />
+    <!-- M1 Perception pure-logic files (event side) -->
+    <Compile Include="..\RimAI.Agent\Source\Perception\Events\EventBus.cs" Link="Linked\RimAI.Agent\EventBus.cs" />
+    <Compile Include="..\RimAI.Agent\Source\Perception\CadenceController.cs" Link="Linked\RimAI.Agent\CadenceController.cs" />
+    <!-- M1 Perception DTO + pure-logic files (snapshot side) -->
+    <Compile Include="..\RimAI.Agent\Source\Perception\PerceptionDTOs.cs" Link="Linked\RimAI.Agent\PerceptionDTOs.cs" />
+    <Compile Include="..\RimAI.Agent\Source\Perception\EntityIdFormatter.cs" Link="Linked\RimAI.Agent\EntityIdFormatter.cs" />
+    <Compile Include="..\RimAI.Agent\Source\Perception\SnapshotTrimmer.cs" Link="Linked\RimAI.Agent\SnapshotTrimmer.cs" />
+    <Compile Include="..\RimAI.Agent\Source\Perception\SnapshotDiffEngine.cs" Link="Linked\RimAI.Agent\SnapshotDiffEngine.cs" />
   </ItemGroup>
 
   <ItemGroup>

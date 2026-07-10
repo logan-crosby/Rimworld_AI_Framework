@@ -527,5 +527,11 @@ namespace RimAI.Agent.Action
 
 **Test data:** JSON fixtures for each command type under `RimAI.Agent.Tests/Fixtures/ActionCommands/`.
 
+## 14. EntityId Contract (G-03 resolution)
+
+Entity references use the canonical `EntityId` format defined in [01-perception.md §9](01-perception.md#9-entityid-contract-g-03-resolution): `Thing.GetUniqueLoadID()` for pawns/things/buildings; typed prefixes for zones (`zone_`), bills (`bill_`), and factions (`faction_`). IDs are save-stable; no separate registry.
+
+Action resolves via `IEntityResolver` (main-thread only): parse prefix → look up → verify exists+spawned+correct map → return live object. Dangling/stale IDs produce `CommandResult` with `FailureCategory.EntityNotFound`, never a throw.
+
 ---
 **STATUS: DOCS-B PASS** — ~260 lines
