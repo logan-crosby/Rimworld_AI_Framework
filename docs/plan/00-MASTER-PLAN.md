@@ -4,6 +4,8 @@
 **Docs:** `01-perception.md`, `02-cognition.md`, `03-action.md`, `04-memory.md`, `05-orchestration.md`, **`06-plan-audit.md` (reconciliation pass — where it conflicts with 00–05, 06 wins)**
 **Skeleton code:** `RimAI.Agent/` project (stubs with comment trees; every public member has a `// TODO(impl)` contract comment).
 
+**Product architecture decision — September 9, 2026:** [Survival core architecture](../design/2026-09-09-survival-core-architecture.md) governs the product scope and runtime boundary: reliable vanilla colony survival first; DLC and victory later; an embedded C# player mod with Framework/Harmony dependencies and a supported provider key. External agents, GABS and RimBridge are optional development/evaluation tools. Read the [supporting research](../research/2026-09-09-autonomous-player-core-design.md) before adopting upstream code. The older layer/milestone details below require reconciliation with that decision before implementation; the current source audit is in the research report.
+
 ## 1. Vision
 
 A player-replacement AI: it observes the colony, forms goals, issues the same commands a human player could, and adapts over a full playthrough. The human can dial autonomy from "advisor" (suggests only) to "full player" (acts unattended).

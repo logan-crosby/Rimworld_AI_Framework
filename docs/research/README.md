@@ -1,6 +1,13 @@
 # External Source Research
 
-Pattern harvests from MIT-licensed RimWorld LLM mods. All four sources permit code adoption with attribution. Each doc: architecture summary, key patterns with `path:line` citations, answers to our audit gaps, ADOPT/AVOID lists.
+## Current player architecture research
+
+- [Open-source player research and core recommendation](2026-09-09-autonomous-player-core-design.md) — current project comparison, action-semantics audit, source pins, reuse decisions and limitations.
+- [Survival core architecture](../design/2026-09-09-survival-core-architecture.md) — selected installable BYOK mod design, required components, interactions, failure behavior and survival acceptance gates. DLC and victory support follow survival.
+
+## Earlier pattern analyses
+
+Pattern harvests from four MIT-licensed RimWorld LLM mods. Each doc includes an architecture summary, source citations, audit-gap answers and adoption guidance. Licensing and behavior still need verification at the exact revision selected for reuse.
 
 | Doc | Source | Feeds | Gaps addressed |
 |---|---|---|---|
